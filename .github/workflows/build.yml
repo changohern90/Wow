@@ -1,5 +1,7 @@
 name: build
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -9,12 +11,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: sdk
+        run: |
+          echo "SDK en: $ANDROID_HOME"
+          yes | sdkmanager --licenses || true
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0" || true
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - run: gradle assembleDebug --no-daemon --stacktrace
+      - name: compilar
+        run: gradle assembleDebug --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: panel-apk
           path: app/build/outputs/apk/debug/*.apk
